@@ -203,6 +203,11 @@ void registerFilters() {
     registerFilter(".Matrix.EdgeDetection.Standard.Diagonal1", projMatrix3x3_EdgeDetection_Diagonal1);
     registerFilter(".Matrix.EdgeDetection.Standard.Diagonal2", projMatrix3x3_EdgeDetection_Diagonal2);
 
+    //histogram
+    registerFilter(".Histogram.All", projHistogram_All);
+    registerFilter(".Histogram.Red", projHistogram_Red);
+    registerFilter(".Histogram.Green", projHistogram_Green);
+    registerFilter(".Histogram.Blue", projHistogram_Blue);
 }
 
 int main() {

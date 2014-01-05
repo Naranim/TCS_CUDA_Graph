@@ -37,11 +37,13 @@ TARGET = tcs.x
 
 CUDA_CLASSES = projInvert.cu \
 			   projMatrix3x3.cu \
+			   projHistogram.cu \
 			   projGrayScale.cu
 
 OBJS = projInvert.o \
 	   projMatrix3x3.o \
 	   projMatrix3x3Adapter.o \
+	   projHistogram.o \
 	   projGrayScale.o
 
 %.o: %.cu
