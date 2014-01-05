@@ -65,12 +65,14 @@ void projCalculateHistogram_generateImage(
     }
 }
 
+GPUImage histogramTransform(const GPUImage& input) {
+    return GPUImage::createEmpty(512, 256);
+}
+
 void projHistogram(const GPUImage& input, GPUImage& output, int option) {
     rgbPixel* dInput = input.getDevicePixels();
     rgbPixel* dOutput = output.getDevicePixels();
-    int width = input.getWidth();
-    int height = input.getHeight();
-    int size = width * height;
+    
 
     int histoSize = sizeof(unsigned int) * 256;
     unsigned int *histoR, *histoG, *histoB, *histoAll;
@@ -84,6 +86,8 @@ void projHistogram(const GPUImage& input, GPUImage& output, int option) {
     checkCudaErrors(cudaMemset(histoB, 0, histoSize));
     checkCudaErrors(cudaMemset(histoAll, 0, histoSize));
 
+    int size = input.getWidth() * input.getHeight();
+    
     const dim3 blockSize(256, 1, 1);
     const dim3 gridSize((size + 255) / 256, 1, 1);
     projCalculateHistogram_compute<<<gridSize, blockSize>>>(dInput, size, histoR, histoG, histoB, histoAll);
@@ -91,6 +95,10 @@ void projHistogram(const GPUImage& input, GPUImage& output, int option) {
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
 
+    int width = output.getWidth();
+    int height = output.getHeight();
+    size = width * height;
+    
     const dim3 blSize(1024, 1, 1);
     const dim3 grSize((size + 1023) / 1024, 1, 1);
 

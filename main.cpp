@@ -17,18 +17,27 @@ using namespace tcs_cuda;
 string inputFileName = "input.png";
 string outputFileName = "output.png";
 
+typedef void (*Filter)(const GPUImage&, GPUImage&);
+typedef GPUImage (*Transform)(const GPUImage&);
+
+GPUImage defaultTransform(const GPUImage& input) {
+    return GPUImage::createEmpty(input.getWidth(), input.getHeight());
+}
+
 class MenuNode {
     private:
         MenuNode            *_parent;
         string              _label;
-        vector<MenuNode* >     _children;
-        void (*_filter)(const GPUImage&, GPUImage&);
+        vector<MenuNode* >  _children;
+
+        Filter              _filter;
+        Transform           _transform;
 
     public:
         static MenuNode     *rootNode;
         
-        MenuNode(MenuNode* parent, const string& label, void (*filter)(const GPUImage&, GPUImage&)) 
-            : _label(label), _filter(filter), _parent(parent) {}
+        MenuNode(MenuNode* parent, const string& label, Filter filter, Transform transform) 
+            : _label(label), _filter(filter), _parent(parent), _transform(transform) {}
 
         ~MenuNode() {
             for (vector<MenuNode*>::iterator it = _children.begin(); it != _children.end(); it++) {
@@ -43,13 +52,13 @@ class MenuNode {
                 if ((*it)->_label == label)
                     return *it;
             }
-            MenuNode *node = new MenuNode(this, label, 0);
+            MenuNode *node = new MenuNode(this, label, 0, 0);
             _children.push_back(node);
             return node;
         }
 
-        MenuNode* makeLeaf(const string& label, void (*func)(const GPUImage&, GPUImage&)) {
-            MenuNode *node = new MenuNode(this, label, func);
+        MenuNode* makeLeaf(const string& label, Filter func, Transform transform) {
+            MenuNode *node = new MenuNode(this, label, func, transform);
             _children.push_back(node);
             return node;
         }
@@ -117,7 +126,7 @@ class MenuNode {
             MenuNode *next = _children[command-2];
             if (next->_filter != 0) {
                 GPUImage inputImage = GPUImage::load(inputFileName);
-                GPUImage outputImage = GPUImage::createEmpty(inputImage.getWidth(), inputImage.getHeight());
+                GPUImage outputImage = next->_transform(inputImage);
                 next->_filter(inputImage, outputImage);
                 GPUImage::save(outputFileName, outputImage);
                 return MenuNode::rootNode;
@@ -129,10 +138,10 @@ class MenuNode {
 
 MenuNode* MenuNode::rootNode = 0;
 
-void registerFilter(const string& path, void (*filter)(const GPUImage&, GPUImage&)) {
+void registerFilter(const string& path, Filter filter, Transform transform = &defaultTransform) {
     if(path[0] != '.') return;
     if ("." == path){ //rootNode
-        MenuNode::rootNode = new MenuNode(0, ".", 0);
+        MenuNode::rootNode = new MenuNode(0, ".", 0, 0);
         return;
     }
     
@@ -148,7 +157,7 @@ void registerFilter(const string& path, void (*filter)(const GPUImage&, GPUImage
         if (ind < len) //node
             currentNode = currentNode->goToLabel(lastLabel);
         else { // leaf
-            currentNode->makeLeaf(lastLabel, filter);
+            currentNode->makeLeaf(lastLabel, filter, transform);
             return;
         }
         ind++;
@@ -157,7 +166,7 @@ void registerFilter(const string& path, void (*filter)(const GPUImage&, GPUImage
 
 void registerFilters() {
     //root
-    registerFilter(".", 0);
+    registerFilter(".", 0, 0);
 
     //invert
     registerFilter(".PerPixel.Invert", projInvert);
@@ -204,10 +213,10 @@ void registerFilters() {
     registerFilter(".Matrix.EdgeDetection.Standard.Diagonal2", projMatrix3x3_EdgeDetection_Diagonal2);
 
     //histogram
-    registerFilter(".Histogram.All", projHistogram_All);
-    registerFilter(".Histogram.Red", projHistogram_Red);
-    registerFilter(".Histogram.Green", projHistogram_Green);
-    registerFilter(".Histogram.Blue", projHistogram_Blue);
+    registerFilter(".Histogram.All", projHistogram_All, histogramTransform);
+    registerFilter(".Histogram.Red", projHistogram_Red, histogramTransform);
+    registerFilter(".Histogram.Green", projHistogram_Green, histogramTransform);
+    registerFilter(".Histogram.Blue", projHistogram_Blue, histogramTransform);
 }
 
 int main() {
