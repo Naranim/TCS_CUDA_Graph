@@ -29,5 +29,6 @@ void projGreyscale(const GPUImage& input, GPUImage& output);
 void projInvert(const GPUImage& input, GPUImage& output);
 #include "projMatrix3x3.h"
 #include "projHistogram.h"
+#include "projTransform.h"
 
 #endif

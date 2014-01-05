@@ -217,6 +217,12 @@ void registerFilters() {
     registerFilter(".Histogram.Red", projHistogram_Red, histogramTransform);
     registerFilter(".Histogram.Green", projHistogram_Green, histogramTransform);
     registerFilter(".Histogram.Blue", projHistogram_Blue, histogramTransform);
+
+    //transform
+    registerFilter(".Transform.Flip.Horizontal", flipHor); 
+    registerFilter(".Transform.Flip.Vertical", flipVer); 
+    // registerFilter(".Transform.Rescale", rescale); 
+    
 }
 
 int main() {
