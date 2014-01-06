@@ -221,6 +221,8 @@ void registerFilters() {
     //transform
     registerFilter(".Transform.Flip.Horizontal", flipHor); 
     registerFilter(".Transform.Flip.Vertical", flipVer); 
+    registerFilter(".Transform.Rotate.Left", rotateLeft, rotateTransform); 
+    registerFilter(".Transform.Rotate.Right", rotateRight, rotateTransform); 
     // registerFilter(".Transform.Rescale", rescale); 
     
 }
