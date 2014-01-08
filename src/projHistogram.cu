@@ -66,12 +66,12 @@ void projCalculateHistogram_generateImage(
 }
 
 GPUImage histogramTransform(const GPUImage& input) {
-    return GPUImage::createEmpty(512, 256);
+    return GPUImage::createEmptyRGB(512, 256);
 }
 
 void projHistogram(const GPUImage& input, GPUImage& output, int option) {
-    rgbPixel* dInput = input.getDevicePixels();
-    rgbPixel* dOutput = output.getDevicePixels();
+    rgbPixel* dInput = input.getDeviceRGBPixels();
+    rgbPixel* dOutput = output.getDeviceRGBPixels();
     
 
     int histoSize = sizeof(unsigned int) * 256;

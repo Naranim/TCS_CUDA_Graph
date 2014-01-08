@@ -19,9 +19,19 @@ string outputFileName = "output.png";
 
 typedef void (*Filter)(const GPUImage&, GPUImage&);
 typedef GPUImage (*Transform)(const GPUImage&);
+typedef GPUImage (*Load)(const std::string&);
+typedef void (*Save)(const std::string&, const GPUImage&);
 
 GPUImage defaultTransform(const GPUImage& input) {
-    return GPUImage::createEmpty(input.getWidth(), input.getHeight());
+    return GPUImage::createEmptyRGB(input.getWidth(), input.getHeight());
+}
+
+GPUImage defaultLoad(const std::string& fileName) {
+    return GPUImage::loadRGB(fileName);
+}
+
+void defaultSave(const std::string& fileName, const GPUImage& image) {
+    GPUImage::saveRGB(fileName, image);
 }
 
 class MenuNode {
@@ -32,12 +42,14 @@ class MenuNode {
 
         Filter              _filter;
         Transform           _transform;
+		Load				_load;	
+		Save				_save;
 
     public:
         static MenuNode     *rootNode;
         
-        MenuNode(MenuNode* parent, const string& label, Filter filter, Transform transform) 
-            : _label(label), _filter(filter), _parent(parent), _transform(transform) {}
+        MenuNode(MenuNode* parent, const string& label, Filter filter, Transform transform, Load load, Save save) 
+            : _label(label), _filter(filter), _parent(parent), _transform(transform), _load(load), _save(save) {}
 
         ~MenuNode() {
             for (vector<MenuNode*>::iterator it = _children.begin(); it != _children.end(); it++) {
@@ -52,13 +64,13 @@ class MenuNode {
                 if ((*it)->_label == label)
                     return *it;
             }
-            MenuNode *node = new MenuNode(this, label, 0, 0);
+            MenuNode *node = new MenuNode(this, label, 0, 0, 0, 0);
             _children.push_back(node);
             return node;
         }
 
-        MenuNode* makeLeaf(const string& label, Filter func, Transform transform) {
-            MenuNode *node = new MenuNode(this, label, func, transform);
+        MenuNode* makeLeaf(const string& label, Filter func, Transform transform, Load load, Save save) {
+            MenuNode *node = new MenuNode(this, label, func, transform, load, save);
             _children.push_back(node);
             return node;
         }
@@ -125,10 +137,10 @@ class MenuNode {
             //enter node
             MenuNode *next = _children[command-2];
             if (next->_filter != 0) {
-                GPUImage inputImage = GPUImage::load(inputFileName);
+                GPUImage inputImage = next->_load(inputFileName);
                 GPUImage outputImage = next->_transform(inputImage);
                 next->_filter(inputImage, outputImage);
-                GPUImage::save(outputFileName, outputImage);
+                next->_save(outputFileName, outputImage);
                 return MenuNode::rootNode;
             }
 
@@ -138,10 +150,10 @@ class MenuNode {
 
 MenuNode* MenuNode::rootNode = 0;
 
-void registerFilter(const string& path, Filter filter, Transform transform = &defaultTransform) {
+void registerFilter(const string& path, Filter filter, Transform transform = &defaultTransform, Load load = &defaultLoad, Save save = &defaultSave) {
     if(path[0] != '.') return;
     if ("." == path){ //rootNode
-        MenuNode::rootNode = new MenuNode(0, ".", 0, 0);
+        MenuNode::rootNode = new MenuNode(0, ".", 0, 0, 0, 0);
         return;
     }
     
@@ -157,7 +169,7 @@ void registerFilter(const string& path, Filter filter, Transform transform = &de
         if (ind < len) //node
             currentNode = currentNode->goToLabel(lastLabel);
         else { // leaf
-            currentNode->makeLeaf(lastLabel, filter, transform);
+            currentNode->makeLeaf(lastLabel, filter, transform, load, save);
             return;
         }
         ind++;
@@ -170,6 +182,12 @@ void registerFilters() {
 
     //invert
     registerFilter(".PerPixel.Invert", projInvert);
+
+    //grayscale
+    registerFilter(".PerPixel.Grayscale", projGreyscale);
+	
+	//tone mapping
+    registerFilter(".PerPixel.ToneMapping", projTonemapping, hdrTransform, GPUImage::loadHDR, GPUImage::saveHDR);
 
     //matrix
     registerFilter(".Matrix.Embos.EmbosEast", projMatrix3x3_EmbosEast);

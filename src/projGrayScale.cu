@@ -20,8 +20,8 @@ void projCalculateGreyScale(
 
 void projGreyscale(const GPUImage& input, GPUImage& output)
 {
-    rgbPixel* d_rgbaImage = input.getDevicePixels();
-    rgbPixel* d_greyImage = output.getDevicePixels();
+    rgbPixel* d_rgbaImage = input.getDeviceRGBPixels();
+    rgbPixel* d_greyImage = output.getDeviceRGBPixels();
     int numRows = input.getHeight();
     int numCols = input.getWidth();
 

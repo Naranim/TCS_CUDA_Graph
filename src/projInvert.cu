@@ -20,8 +20,8 @@ void projCalculateInvert(rgbPixel* input, rgbPixel* output, int size)
 }
 
 void projInvert(const GPUImage& input, GPUImage& output) {
-    rgbPixel* dInput = input.getDevicePixels();
-    rgbPixel* dOutput = output.getDevicePixels();
+    rgbPixel* dInput = input.getDeviceRGBPixels();
+    rgbPixel* dOutput = output.getDeviceRGBPixels();
     int size = input.getWidth() * input.getHeight();
 
     const dim3 blockSize(1024, 1, 1);

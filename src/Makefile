@@ -39,14 +39,16 @@ CUDA_CLASSES = projInvert.cu \
 			   projMatrix3x3.cu \
 			   projHistogram.cu \
 			   projGrayScale.cu \
-			   projTransform.cu
+			   projTransform.cu \
+                           projToneMapping.cu
 
 OBJS = projInvert.o \
 	   projMatrix3x3.o \
 	   projMatrix3x3Adapter.o \
 	   projHistogram.o \
 	   projGrayScale.o \
-	   projTransform.o
+	   projTransform.o \
+           projToneMapping.o
 
 %.o: %.cu
 	$(NVCC) -c $< -o $@ $(NVCC_OPTS)

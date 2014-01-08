@@ -43,8 +43,8 @@ void projFlip(rgbPixel* input,
 }
 
 void flip(const GPUImage& input, GPUImage& output, direction d) {
-    rgbPixel* cuInput = input.getDevicePixels();
-    rgbPixel* cuOutput = output.getDevicePixels();
+    rgbPixel* cuInput = input.getDeviceRGBPixels();
+    rgbPixel* cuOutput = output.getDeviceRGBPixels();
     int width = input.getWidth();
     int height = input.getHeight();
 
@@ -93,12 +93,12 @@ void projRotate(rgbPixel* input,
 }
 
 GPUImage rotateTransform(const GPUImage& input) {
-    return GPUImage::createEmpty(input.getHeight(), input.getWidth());
+    return GPUImage::createEmptyRGB(input.getHeight(), input.getWidth());
 }
 
 void rotate(const GPUImage& input, GPUImage& output, direction d) {
-    rgbPixel* cuInput = input.getDevicePixels();
-    rgbPixel* cuOutput = output.getDevicePixels();
+    rgbPixel* cuInput = input.getDeviceRGBPixels();
+    rgbPixel* cuOutput = output.getDeviceRGBPixels();
     int width = input.getWidth();
     int height = input.getHeight();
 

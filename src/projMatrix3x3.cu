@@ -64,8 +64,8 @@ void projCalculateMatrix3x3(
 }
 
 void projMatrix3x3(const GPUImage& input, GPUImage& output, int* matrix3x3) {
-    rgbPixel* dInput = input.getDevicePixels();
-    rgbPixel* dOutput = output.getDevicePixels();
+    rgbPixel* dInput = input.getDeviceRGBPixels();
+    rgbPixel* dOutput = output.getDeviceRGBPixels();
     int width = input.getWidth();
     int height = input.getHeight();
 

@@ -22,6 +22,8 @@ using namespace tcs_cuda;
 
 void projGreyscale(const GPUImage& input, GPUImage& output);
 
+#include "projToneMapping.h"
+
 // ----------------
 // - Mikos Patryk -
 // ----------------
