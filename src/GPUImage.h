@@ -21,7 +21,7 @@
 #define rgbPixel uchar3
 #define rgbaPixel uchar4
 #define hdrPixel float
-#define hdrChannelsNumber 3
+#define colourChannelsNumber 3
 
 namespace tcs_cuda {
     class GPUImage {
@@ -30,10 +30,12 @@ namespace tcs_cuda {
         int         _height;
         rgbPixel*   _deviceImageRGBPtr;
 		hdrPixel*   _deviceImageHDRPtr;
+        rgbaPixel*   _deviceImageRGBAPtr;
 
     private:
         GPUImage(int width, int height, rgbPixel* data);
         GPUImage(int width, int height, hdrPixel* data);
+        GPUImage(int width, int height, rgbaPixel* data);
 
     public:
         ~GPUImage();
@@ -43,15 +45,19 @@ namespace tcs_cuda {
 
         rgbPixel* getDeviceRGBPixels() const;
         hdrPixel* getDeviceHDRPixels() const;
+        rgbaPixel* getDeviceRGBAPixels() const;
 
         static GPUImage loadRGB(const std::string& fileName);
         static GPUImage loadHDR(const std::string& fileName);
+        static GPUImage loadRGBA(const std::string& fileName);
         
-	static void saveRGB(const std::string& fileName, const GPUImage& image);
+		static void saveRGB(const std::string& fileName, const GPUImage& image);
         static void saveHDR(const std::string& fileName, const GPUImage& image);
+		static void saveRGBA(const std::string& fileName, const GPUImage& image);
 
         static GPUImage createEmptyRGB(int width, int height);
         static GPUImage createEmptyHDR(int width, int height);
+        static GPUImage createEmptyRGBA(int width, int height);
     };
 }
 

@@ -189,6 +189,9 @@ void registerFilters() {
 	//tone mapping
     registerFilter(".PerPixel.ToneMapping", projTonemapping, hdrTransform, GPUImage::loadHDR, GPUImage::saveHDR);
 
+	//tone mapping
+    registerFilter(".PerPixel.RedEyeRemover", projRedeye, rgbaTransform, GPUImage::loadRGBA, GPUImage::saveRGBA);
+
     //matrix
     registerFilter(".Matrix.Embos.EmbosEast", projMatrix3x3_EmbosEast);
     registerFilter(".Matrix.Embos.EmbosSouthEast", projMatrix3x3_EmbosSouthEast);

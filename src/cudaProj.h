@@ -23,6 +23,7 @@ using namespace tcs_cuda;
 void projGreyscale(const GPUImage& input, GPUImage& output);
 
 #include "projToneMapping.h"
+#include "projRedEye.h"
 
 // ----------------
 // - Mikos Patryk -
