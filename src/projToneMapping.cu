@@ -101,8 +101,8 @@ void create_histogram(const float* const d_logLuminance, float min_logLum, const
 }
 
 __global__
-void find_min_max(const float* const inputMin, const float* const inputMax, float* minLuminance, float* maxLuminance, int n){
-    int blockSize = 1024;
+void find_min(const float* const inputMin, float* minLuminance, int n){
+    int blockSize = blockDim.x;
     int threadId = threadIdx.x;
     int idx = threadIdx.x + blockSize * blockIdx.x;
     int firstIdx = blockSize * blockIdx.x;
@@ -126,8 +126,17 @@ void find_min_max(const float* const inputMin, const float* const inputMax, floa
     if(threadId == 0){
         minLuminance[blockIdx.x] = sdata[0];
     }
+}
 
-    __syncthreads();
+__global__
+void find_max(const float* const inputMax, float* maxLuminance, int n){
+    int blockSize = blockDim.x;
+    int threadId = threadIdx.x;
+    int idx = threadIdx.x + blockSize * blockIdx.x;
+    int firstIdx = blockSize * blockIdx.x;
+    
+    extern __shared__ float sdata[];
+    
     if(idx < n){
         sdata[threadId] = inputMax[idx];
     }else{
@@ -154,7 +163,7 @@ void prefix_sum(unsigned int* input, unsigned int* block_sum, const size_t n){
     int idx = threadIdx.x + blockSize * blockIdx.x;
 	
     __shared__ float sdata[1024];
-	if(idx < n && idx > 0){
+	if(idx < n && threadId > 0){
 		sdata[threadId] = input[idx-1]; 
 	}else{
 		sdata[threadId] = 0;
@@ -248,42 +257,52 @@ void calculate_histogram_and_cdf(const float* const d_logLuminance,
 {
 	int totalSize = numRows * numCols;  
 
+	//Step 1
 	int blockSize = 1024;  
 	int blocksNum = totalSize;
-	float* d_output_min;  
-	const float* d_input_min = d_logLuminance;  
-	float* d_output_max;  
-	const float* d_input_max = d_logLuminance;  
-	cudaMalloc((void**) &d_output_min, sizeof(float) * blocksNum);
-	cudaMalloc((void**) &d_output_max, sizeof(float) * blocksNum);  
+	float* d_output;  
+	const float* d_input = d_logLuminance;  
+	int n = totalSize;
+	cudaMalloc((void**) &d_output, sizeof(float) * blocksNum);
 	do{  
 		blocksNum = ceil(blocksNum / (blockSize * 1.0));  
-		find_min_max<<<blocksNum,blockSize, blockSize * sizeof(float)>>>(d_input_min, d_input_max, d_output_min, d_output_max, totalSize);
-		d_input_min = d_output_min;      
-		d_input_max = d_output_max;      
+		find_min<<<blocksNum,blockSize, blockSize * sizeof(float)>>>(d_input, d_output, n);
+		d_input = d_output;      
+		n = blocksNum;
 	}while(blocksNum > 1);
-	cudaMemcpy(&min_logLum,d_output_min,sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&max_logLum,d_output_max,sizeof(float), cudaMemcpyDeviceToHost);
-	cudaFree((void *)d_output_max);
-	cudaFree((void *)d_output_min);
+	cudaMemcpy(&min_logLum,d_output,sizeof(float), cudaMemcpyDeviceToHost);
+	blocksNum = totalSize;
+	d_input = d_logLuminance;  
+	n = totalSize;
+	do{  
+		blocksNum = ceil(blocksNum / (blockSize * 1.0));  
+		find_max<<<blocksNum,blockSize, blockSize * sizeof(float)>>>(d_input, d_output, n);
+		d_input = d_output;      
+		n = blocksNum;
+	}while(blocksNum > 1);
+	cudaMemcpy(&max_logLum,d_output,sizeof(float), cudaMemcpyDeviceToHost);
+	cudaFree((void *)d_output);
 
+	//Step 2
 	float logLumRange = max_logLum - min_logLum;
 
+	//Step 3
 	unsigned int *d_bins;
 	cudaMalloc((void**) &d_bins, sizeof(unsigned int) * numBins);
 	blocksNum = ceil(numBins / (blockSize * 1.0));    
 	init_array<<<blocksNum,blockSize>>>(numBins, d_bins);
 	blocksNum = ceil(totalSize / (blockSize * 1.0));    
 	create_histogram<<<blocksNum,blockSize>>>(d_logLuminance, min_logLum, numBins, logLumRange, d_bins);
-		
-	
+
+
+	//Step 4
 	unsigned int *block_sum;
 	cudaMalloc((void**) &block_sum, sizeof(unsigned int) * numBins);
 	blocksNum = ceil(numBins / (blockSize * 1.0));    
 	init_array<<<blocksNum,blockSize>>>(numBins, block_sum);
 	prefix_sum<<<blocksNum,blockSize>>>(d_bins, block_sum, numBins);
 	create_cdf<<<blocksNum,blockSize>>>(d_bins, block_sum, numBins, d_cdf);  
-		
+
 	cudaFree((void *)d_bins);
 	cudaFree((void *)block_sum);
 }
@@ -362,8 +381,8 @@ void projTonemapping(const GPUImage& input, GPUImage& output){
 	//we map each luminance value to its new value
 	//and then transform back to RGB space
 	tonemap<<<gridSize, blockSize>>>(d_x, d_y, d_luminance, d_cdf_normalized,
-								   d_red, d_green, d_blue, min_logLum, max_logLum,
-																	 numBins, numRows, numCols);
+								d_red, d_green, d_blue, min_logLum, max_logLum,
+								numBins, numRows, numCols);
 
 	cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 
