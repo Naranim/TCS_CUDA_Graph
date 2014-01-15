@@ -339,12 +339,37 @@ void sort_scored_values_and_positions(unsigned int* const d_inputVals,
 	cudaFree(d_positions);
 }
 
+GPUImage getTemplate(const GPUImage& input){
+	const char* const inputFileName = input.getImageFileName();
+	const char* templateNameSufix = "_templ";
+	int sufixSize = strlen(templateNameSufix);
+	int inputNameSize = strlen(inputFileName);
+	int pos = strrchr(inputFileName,'.') - inputFileName;
+	char* templateFileName = new char[inputNameSize + sufixSize];
+	int idx = 0;
+	while(idx < pos){
+		templateFileName[idx] = inputFileName[idx];
+		++idx;
+	}
+	while(idx < pos + sufixSize){
+		templateFileName[idx] = templateNameSufix[idx-pos];
+		++idx;		
+	}
+	while(idx < inputNameSize + sufixSize){
+		templateFileName[idx] = inputFileName[idx-strlen(templateNameSufix)];
+		++idx;		
+	}	
+	//printf("name: %s\n",templateFileName);
+	return GPUImage::loadRGBA(templateFileName);
+
+}
+
 void projRedeye(const GPUImage& input, GPUImage& output){
 	//make sure the context initializes ok
 	checkCudaErrors(cudaFree(0));
 
 	uchar4 *inImg = input.getDeviceRGBAPixels();
-	GPUImage templateImage = GPUImage::loadRGBA("eye_template.jpg");
+	GPUImage templateImage = getTemplate(input);
 	uchar4 *eyeTemplate = templateImage.getDeviceRGBAPixels();
 
 	size_t numRowsTemplate = templateImage.getHeight();

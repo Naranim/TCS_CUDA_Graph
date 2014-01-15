@@ -31,17 +31,19 @@ namespace tcs_cuda {
         rgbPixel*   _deviceImageRGBPtr;
 		hdrPixel*   _deviceImageHDRPtr;
         rgbaPixel*   _deviceImageRGBAPtr;
+		const char* const imageFileName;
 
     private:
-        GPUImage(int width, int height, rgbPixel* data);
-        GPUImage(int width, int height, hdrPixel* data);
-        GPUImage(int width, int height, rgbaPixel* data);
+        GPUImage(int width, int height, rgbPixel* data, const std::string& fileName);
+        GPUImage(int width, int height, hdrPixel* data, const std::string& fileName);
+        GPUImage(int width, int height, rgbaPixel* data, const std::string& fileName);
 
     public:
         ~GPUImage();
 
         int getWidth() const;
         int getHeight() const;
+		const char* getImageFileName() const;
 
         rgbPixel* getDeviceRGBPixels() const;
         hdrPixel* getDeviceHDRPixels() const;

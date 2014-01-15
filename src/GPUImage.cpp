@@ -2,14 +2,18 @@
 #include <stdio.h>
 using namespace tcs_cuda;
 
-GPUImage::GPUImage(int width, int height, rgbPixel* data) 
-    : _width(width), _height(height), _deviceImageRGBPtr(data), _deviceImageHDRPtr(0), _deviceImageRGBAPtr(0) {}
+GPUImage::GPUImage(int width, int height, rgbPixel* data, const std::string& fileName) 
+    : _width(width), _height(height), _deviceImageRGBPtr(data), _deviceImageHDRPtr(0), _deviceImageRGBAPtr(0), imageFileName(fileName.c_str()){}
 
-GPUImage::GPUImage(int width, int height, hdrPixel* data) 
-    : _width(width), _height(height), _deviceImageHDRPtr(data), _deviceImageRGBPtr(0), _deviceImageRGBAPtr(0) {}
+GPUImage::GPUImage(int width, int height, hdrPixel* data, const std::string& fileName) 
+    : _width(width), _height(height), _deviceImageHDRPtr(data), _deviceImageRGBPtr(0), _deviceImageRGBAPtr(0), imageFileName(fileName.c_str()){}
 
-GPUImage::GPUImage(int width, int height, rgbaPixel* data) 
-    : _width(width), _height(height), _deviceImageRGBAPtr(data), _deviceImageHDRPtr(0), _deviceImageRGBPtr(0) {}
+GPUImage::GPUImage(int width, int height, rgbaPixel* data, const std::string& fileName) 
+    : _width(width), _height(height), _deviceImageRGBAPtr(data), _deviceImageHDRPtr(0), _deviceImageRGBPtr(0), imageFileName(fileName.c_str()){}
+
+const char* GPUImage::getImageFileName() const{
+	return imageFileName;
+}
 
 GPUImage::~GPUImage() {
 
@@ -76,7 +80,7 @@ GPUImage GPUImage::loadRGB(const std::string& fileName) {
     checkCudaErrors(cudaMemcpy(deviceImagePtr, hostImagePtr, allocSize, cudaMemcpyHostToDevice));
     
     //create a Image object
-    return GPUImage(loadedImage.cols, loadedImage.rows, deviceImagePtr);
+    return GPUImage(loadedImage.cols, loadedImage.rows, deviceImagePtr, fileName);
 }
 
 
@@ -114,7 +118,7 @@ GPUImage GPUImage::loadHDR(const std::string& fileName)
     checkCudaErrors(cudaMemcpy(deviceImagePtr, hostImagePtr, allocSize, cudaMemcpyHostToDevice));
     
     //create a Image object
-    return GPUImage(loadedImage.cols, loadedImage.rows, deviceImagePtr);
+    return GPUImage(loadedImage.cols, loadedImage.rows, deviceImagePtr, fileName);
 }
 
 GPUImage GPUImage::loadRGBA(const std::string& fileName) {
@@ -157,7 +161,7 @@ GPUImage GPUImage::loadRGBA(const std::string& fileName) {
     checkCudaErrors(cudaMemcpy(deviceImagePtr, hostImagePtr, allocSize, cudaMemcpyHostToDevice));
     
     //create a Image object
-    return GPUImage(loadedImage.cols, loadedImage.rows, deviceImagePtr);
+    return GPUImage(loadedImage.cols, loadedImage.rows, deviceImagePtr, fileName);
 }
 
 void GPUImage::saveRGB(const std::string& fileName, const GPUImage& image) {
@@ -224,7 +228,7 @@ GPUImage GPUImage::createEmptyRGB(int width, int height) {
     checkCudaErrors(cudaMalloc((void**)&devicePtr, allocSize));
     checkCudaErrors(cudaMemset(devicePtr, 0, allocSize));
 
-    return GPUImage(width, height, devicePtr);
+    return GPUImage(width, height, devicePtr, "");
 }
 
 GPUImage GPUImage::createEmptyHDR(int width, int height) {
@@ -238,7 +242,7 @@ GPUImage GPUImage::createEmptyHDR(int width, int height) {
     checkCudaErrors(cudaMalloc((void**)&devicePtr, allocSize));
     checkCudaErrors(cudaMemset(devicePtr, 0, allocSize));
 
-    return GPUImage(width, height, devicePtr);
+    return GPUImage(width, height, devicePtr, "");
 }
 
 GPUImage GPUImage::createEmptyRGBA(int width, int height) {
@@ -252,5 +256,5 @@ GPUImage GPUImage::createEmptyRGBA(int width, int height) {
     checkCudaErrors(cudaMalloc((void**)&devicePtr, allocSize));
     checkCudaErrors(cudaMemset(devicePtr, 0, allocSize));
 
-    return GPUImage(width, height, devicePtr);
+    return GPUImage(width, height, devicePtr, "");
 }
