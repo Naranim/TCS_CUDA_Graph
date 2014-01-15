@@ -359,6 +359,7 @@ GPUImage getTemplate(const GPUImage& input){
 		templateFileName[idx] = inputFileName[idx-strlen(templateNameSufix)];
 		++idx;		
 	}	
+	templateFileName[idx] = 0;
 	//printf("name: %s\n",templateFileName);
 	return GPUImage::loadRGBA(templateFileName);
 
