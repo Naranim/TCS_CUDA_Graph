@@ -35,22 +35,24 @@ GCC_OPTS=-O3 -Wall -Wextra -m64
 
 TARGET = tcs.x
 
-CUDA_CLASSES = projInvert.cu \
-			   projMatrix3x3.cu \
+CUDA_CLASSES = projGrayScale.cu \
 			   projHistogram.cu \
-			   projGrayScale.cu \
-			   projTransform.cu \
-               projToneMapping.cu \
-			   projRedEye.cu
+			   projInvert.cu \
+			   projMatrix3x3.cu \
+			   projRedEye.cu \
+			   projRescale.cu \
+			   projToneMapping.cu \
+			   projTransform.cu 
 
-OBJS = projInvert.o \
+OBJS = projGrayScale.o \
+	   projHistogram.o \
+	   projInvert.o \
 	   projMatrix3x3.o \
 	   projMatrix3x3Adapter.o \
-	   projHistogram.o \
-	   projGrayScale.o \
-	   projTransform.o \
-       projToneMapping.o \
-	   projRedEye.o
+	   projRedEye.o \
+	   projRescale.o \
+	   projToneMapping.o \
+	   projTransform.o 
 
 %.o: %.cu
 	$(NVCC) -c $< -o $@ $(NVCC_OPTS)
@@ -69,3 +71,4 @@ compileStructs: GPUImage.cpp
 
 clean:
 	rm -f *.o *.png hw
+

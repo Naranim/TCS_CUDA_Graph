@@ -244,7 +244,7 @@ void registerFilters() {
     registerFilter(".Transform.Flip.Vertical", flipVer); 
     registerFilter(".Transform.Rotate.Left", rotateLeft, rotateTransform); 
     registerFilter(".Transform.Rotate.Right", rotateRight, rotateTransform); 
-    // registerFilter(".Transform.Rescale", rescale); 
+    registerFilter(".Rescale", rescale, rescaleTransform); 
     
 }
 
