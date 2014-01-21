@@ -35,34 +35,34 @@ void projRotate(rgbPixel* input,
                 int outHeight,
                 double scale) {
 
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int N = outWidth*outHeight;
+    int index = (blockIdx.x * blockDim.x + threadIdx.x)*32;
+    for(int i = 0; index < N && i < 32; index++, i++)  {
+        int x = index / outWidth;
+        int y = index % outWidth;
 
-    if(index >= outWidth*outHeight) return;
+        double inX = x / scale;
+        double inY = y / scale;
 
-    int x = index / outWidth;
-    int y = index % outWidth;
+        int nearestX = static_cast<int>(inX + 0.5);
+        int nearestY = static_cast<int>(inY + 0.5);
 
-    double inX = x / scale;
-    double inY = y / scale;
+        double distX = inX - nearestX + 0.5;
+        double distY = inY - nearestY + 0.5;
 
-    int nearestX = static_cast<int>(inX + 0.5);
-    int nearestY = static_cast<int>(inY + 0.5);
+        rgbPixel ret;
 
-    double distX = inX - nearestX;
-    double distY = inY - nearestY;
+        ret.x = 0;
+        ret.y = 0;
+        ret.z = 0;
 
-    rgbPixel ret;
+        ret = add(ret, calc(input, inWidth, nearestX, nearestY, 1-distX, 1-distY));
+        ret = add(ret, calc(input, inWidth, nearestX+1, nearestY, distX, 1-distY));
+        ret = add(ret, calc(input, inWidth, nearestX, nearestY+1, 1-distX, distY));
+        ret = add(ret, calc(input, inWidth, nearestX+1, nearestY+1, distX, distY));
 
-    ret.x = 0;
-    ret.y = 0;
-    ret.z = 0;
-
-    ret = add(ret, calc(input, inWidth, nearestX, nearestY, 1-distX, 1-distY));
-    ret = add(ret, calc(input, inWidth, nearestX+1, nearestY, distX, 1-distY));
-    ret = add(ret, calc(input, inWidth, nearestX, nearestY+1, 1-distX, distY));
-    ret = add(ret, calc(input, inWidth, nearestX+1, nearestY+1, distX, distY));
-
-    output[index] = ret;
+        output[index] = ret;
+    }
 }
 
 void rescale(const GPUImage& input, GPUImage& output) {
@@ -79,7 +79,7 @@ void rescale(const GPUImage& input, GPUImage& output) {
     int outWidth = output.getWidth();
     int outHeight = output.getHeight();
 
-    dim3 gridSize((outHeight*outWidth+1023) >> 10);
+    dim3 gridSize((outHeight*outWidth+32767) >> 15);
     dim3 blockSize(1024);
     projRotate<<<gridSize, blockSize>>>(cuInput, cuOutput, inWidth, inHeight,
                                         outWidth, outHeight, scale);
